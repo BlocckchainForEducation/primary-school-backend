@@ -16,7 +16,7 @@ const { parseExcel, getTeacherById, getStudentsByIds, parseExcelV122 } = require
 //
 router.get("/classes", authen, author(ROLE.STAFF), async (req, res) => {
   const classCol = (await connection).db().collection("Class");
-  const docs = await classCol.find({}).sort({ uploadTimestamp: -1 }).toArray();
+  const docs = await classCol.find({}).toArray();
   return res.json(docs);
 });
 
