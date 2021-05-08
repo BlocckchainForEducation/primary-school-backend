@@ -18,13 +18,12 @@ const {
   addRole,
   addUid,
   createAccount,
-  saveProfiles,
 } = require("../utils");
 const { mockupBKCResponse } = require("../../../utils");
 
-router.get("/teacher-history", authen, author(ROLE.STAFF), async (req, res) => {
+router.get("/teachers", authen, author(ROLE.STAFF), async (req, res) => {
   try {
-    const teacherHistoryCol = (await connection).db().collection("TeacherHistory");
+    const teacherHistoryCol = (await connection).db().collection("Teachers");
     const result = await teacherHistoryCol.find().toArray();
     res.json(result);
   } catch (error) {
@@ -41,14 +40,15 @@ router.post("/create-teacher", authen, author(ROLE.STAFF), upload.single("excel-
     addUniversityPublicKey(teachers, req.body.privateKeyHex);
     const payload = preparePayload(teachers);
     try {
-      const response = await sendToBKC(payload, req.body.privateKeyHex);
-      // const response = mockupBKCResponse(payload, "teacherId");
+      // const response = await sendToBKC(payload, req.body.privateKeyHex);
+      const response = mockupBKCResponse(payload, "teacherId");
       addTxid(teachers, response.data.transactions, "teacherId");
       addRandomPwAndHash(teachers);
       addRole(teachers, ROLE.TEACHER);
       const insertedIds = await createAccount(teachers);
       addUid(teachers, insertedIds);
-      const result = await saveProfiles(teachers, "TeacherHistory", req.file.originalname);
+      const teachersCol = (await connection).db().collection("Teachers");
+      const result = await teachersCol.insertMany(teachers);
       res.json(result.ops[0]);
     } catch (error) {
       console.error(error);
