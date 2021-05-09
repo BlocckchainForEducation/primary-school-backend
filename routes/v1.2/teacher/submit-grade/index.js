@@ -6,51 +6,38 @@ const connection = require("../../../../db");
 const axios = require("axios").default;
 const ObjectID = require("mongodb").ObjectID;
 const { encrypt } = require("eciesjs");
-const { hashObject } = require("../../../utils");
+const { hashObject, randomTxid } = require("../../../utils");
 
-router.get("/my-classes", authen, author(ROLE.TEACHER), async (req, res) => {
-  try {
-    const col = (await connection).db().collection("TeacherHistory");
-    const doc = await col.findOne({ "profiles.uid": new ObjectID(req.user.uid) }, { projection: { "profiles.$": 1, _id: 0 } });
-    const teacherProfile = doc.profiles[0];
-    const classColl = (await connection).db().collection("Class");
-    const classes = await classColl.find({ teacherId: teacherProfile.teacherId }).toArray();
-    return res.json(classes);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).send(error.toString());
-  }
-});
-
-router.post("/save-draff", authen, author(ROLE.TEACHER), async (req, res) => {
-  try {
-    const teacherColl = (await connection).db().collection("TeacherHistory");
-    const doc = await teacherColl.findOne({ "profiles.uid": new ObjectID(req.user.uid) }, { projection: { "profiles.$": 1, _id: 0 } });
-    const teacherProfile = doc.profiles[0];
-    const claxx = req.body.claxx;
-    const classColl = (await connection).db().collection("Class");
-    const opReuslt = await classColl.updateOne(
-      { teacherId: teacherProfile.teacherId, classId: claxx.classId },
-      { $set: { students: claxx.students } }
-    );
-    return res.json(opReuslt);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).send(error);
-  }
-});
+// router.post("/save-draff", authen, author(ROLE.TEACHER), async (req, res) => {
+//   try {
+//     const teacherColl = (await connection).db().collection("TeacherHistory");
+//     const doc = await teacherColl.findOne({ "profiles.uid": new ObjectID(req.user.uid) }, { projection: { "profiles.$": 1, _id: 0 } });
+//     const teacherProfile = doc.profiles[0];
+//     const claxx = req.body.claxx;
+//     const classColl = (await connection).db().collection("Class");
+//     const opReuslt = await classColl.updateOne(
+//       { teacherId: teacherProfile.teacherId, classId: claxx.classId },
+//       { $set: { students: claxx.students } }
+//     );
+//     return res.json(opReuslt);
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).send(error);
+//   }
+// });
 
 router.post("/submit-grade", authen, author(ROLE.TEACHER), async (req, res) => {
   try {
     const classCol = (await connection).db().collection("Class");
-    const privateKeyHex = req.body.privateKeyHex;
+    // const privateKeyHex = req.body.privateKeyHex;
     const claxx = req.body.claxx;
     // require teacher != null
-    const payload = preparePayload(privateKeyHex, claxx);
+    // const payload = preparePayload(privateKeyHex, claxx);
     try {
-      const response = await axios.post("/teacher/submit-grade", payload);
-      claxx.students.forEach((student) => (student.versions[0].txid = findTxid(response.data.transactions, student.publicKey)));
-      claxx.students.forEach((student) => (student.versions[0].timestamp = Date.now()));
+      // const response = await axios.post("/teacher/submit-grade", payload);
+      // claxx.students.forEach((student) => (student.versions[0].txid = findTxid(response.data.transactions, student.publicKey)));
+      claxx.students.forEach((student) => (student.txid = randomTxid()));
+      claxx.students.forEach((student) => (student.timestamp = Date.now()));
       await classCol.updateOne({ classId: claxx.classId }, { $set: { students: claxx.students, isSubmited: true } });
       claxx.isSubmited = true;
       return res.json(claxx); // front-end need txid, isSubmited
