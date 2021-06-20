@@ -13,7 +13,7 @@ const cors = require("cors");
 app.use(cors());
 
 // app.use("/api/v1", require("./routes/v1.0"));
-app.use("/api/v1.2", require("./routes/v1.2"));
+app.use(require("./routes/v1.2"));
 
 const PORT = process.env.PORT || 8000;
 
@@ -22,8 +22,8 @@ const { initMinistryProfile, initStaffAccount } = require("./init");
 https
   .createServer(
     {
-      key: fs.readFileSync("/etc/letsencrypt/live/school-backend.b4e.vn/privkey.pem"), // need bind mount
-      cert: fs.readFileSync("/etc/letsencrypt/live/school-backend.b4e.vn/fullchain.pem"), // need bind mount
+      key: fs.readFileSync("/etc/letsencrypt/live/primary-backend.b4e.vn/privkey.pem"), // need bind mount
+      cert: fs.readFileSync("/etc/letsencrypt/live/primary-backend.b4e.vn/fullchain.pem"), // need bind mount
     },
     app
   )
