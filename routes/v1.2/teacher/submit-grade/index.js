@@ -29,14 +29,16 @@ const { hashObject, randomTxid } = require("../../../utils");
 router.post("/submit-grade", authen, author(ROLE.TEACHER), async (req, res) => {
   try {
     const classCol = (await connection).db().collection("Class");
-    // const privateKeyHex = req.body.privateKeyHex;
+    const privateKeyHex = req.body.privateKeyHex;
     const claxx = req.body.claxx;
+    console.log("🚧 --> router.post --> claxx", claxx);
+
     // require teacher != null
-    // const payload = preparePayload(privateKeyHex, claxx);
+    const payload = preparePayload(privateKeyHex, claxx);
+    console.log("🚧 --> router.post --> payload", payload);
     try {
-      // const response = await axios.post("/teacher/submit-grade", payload);
-      // claxx.students.forEach((student) => (student.versions[0].txid = findTxid(response.data.transactions, student.publicKey)));
-      claxx.students.forEach((student) => (student.txid = randomTxid()));
+      const response = await axios.post("/teacher/submit-grade", payload);
+      claxx.students.forEach((student) => (student.txid = findTxid(response.data.transactions, student.publicKey)));
       claxx.students.forEach((student) => (student.timestamp = Date.now()));
       await classCol.updateOne({ classId: claxx.classId }, { $set: { students: claxx.students, isSubmited: true } });
       claxx.isSubmited = true;
@@ -55,17 +57,19 @@ router.post("/submit-grade", authen, author(ROLE.TEACHER), async (req, res) => {
 function preparePayload(privateKeyHex, claxx) {
   const grades = claxx.students.map((student) => {
     const plain = {
-      semester: claxx.semester,
-      subject: claxx.subject,
       classId: claxx.classId,
       teacherId: claxx.teacher.teacherId,
       teacherName: claxx.teacher.name,
-      department: claxx.teacher.department,
-      studentId: student.studentId,
       studentName: student.name,
-      // versions: student.versions,
-      halfSemesterPoint: student.versions[0].halfSemesterPoint,
-      finalSemesterPoint: student.versions[0].finalSemesterPoint,
+      math: student.math,
+      literacy: student.literacy,
+      language: student.language,
+      naturalNsocial: student.naturalNsocial,
+      historyNgeography: student.historyNgeography,
+      science: student.science,
+      itNtech: student.itNtech,
+      healthEdu: student.healthEdu,
+      art: student.art,
     };
     const cipher = encrypt(student.publicKey, Buffer.from(JSON.stringify(plain))).toString("hex");
     const hash = hashObject(plain);

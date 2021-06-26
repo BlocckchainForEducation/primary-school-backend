@@ -40,8 +40,8 @@ router.post("/create-teacher", authen, author(ROLE.STAFF), upload.single("excel-
     addUniversityPublicKey(teachers, req.body.privateKeyHex);
     const payload = preparePayload(teachers);
     try {
-      // const response = await sendToBKC(payload, req.body.privateKeyHex);
-      const response = mockupBKCResponse(payload, "teacherId");
+      const response = await sendToBKC(payload, req.body.privateKeyHex);
+      // const response = mockupBKCResponse(payload, "teacherId");
       addTxid(teachers, response.data.transactions, "teacherId");
       addRandomPwAndHash(teachers);
       addRole(teachers, ROLE.TEACHER);
@@ -49,7 +49,7 @@ router.post("/create-teacher", authen, author(ROLE.STAFF), upload.single("excel-
       addUid(teachers, insertedIds);
       const teachersCol = (await connection).db().collection("Teachers");
       const result = await teachersCol.insertMany(teachers);
-      res.json(result.ops[0]);
+      res.json(result.ops);
     } catch (error) {
       console.error(error);
       if (error.response) return res.status(502).send(error.response.data);
