@@ -12,12 +12,7 @@ const axios = require("axios").default;
 
 const { bufferToStream, addKeyPairIfNeed } = require("../utils");
 const { parseExcel, getTeacherById, getStudentsByIds, parseExcelV122 } = require("./helper");
-
-const EDU_PROGRAM_ID = {
-  PRIMARY: "Tiểu học cơ sở",
-  SECONDARY: "Trung học cơ sở",
-  HIGHT_SCHOOL: "Trung học phổ thông",
-};
+const { EDU_PROGRAM_ID } = require("../../../constance");
 
 //
 router.get("/classes", authen, author(ROLE.STAFF), async (req, res) => {
@@ -61,6 +56,8 @@ router.post("/class-level-up", authen, author(ROLE.STAFF), async (req, res) => {
       await axios.post("/staff/create-classes", { privateKeyHex, classes: classPayload });
       const col = (await connection).db().collection("Class");
       const opResult = await col.insertOne(newClass);
+      await col.updateOne({ classId: claxx.classId }, { $set: { isLevelUp: true } });
+
       return res.json({ opResult });
     } catch (error) {
       console.error(error);

@@ -57,6 +57,8 @@ router.post("/submit-grade", authen, author(ROLE.TEACHER), async (req, res) => {
 function preparePayload(privateKeyHex, claxx) {
   const grades = claxx.students.map((student) => {
     const plain = {
+      classGroup: claxx.classGroup,
+      nameOfClass: claxx.nameOfClass,
       classId: claxx.classId,
       teacherId: claxx.teacher.teacherId,
       teacherName: claxx.teacher.name,
